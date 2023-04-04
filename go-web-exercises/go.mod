@@ -1,4 +1,4 @@
-module github.com/rominasuarez54/go-web
+module go-web-exercises
 
 go 1.20
 
