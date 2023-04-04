@@ -36,6 +36,7 @@ func main() {
 		productGroup.GET("/:id", productHandler.GetById())
 		productGroup.GET("/search", productHandler.GetPriceGt())
 		productGroup.POST("", productHandler.Create())
+		productGroup.PUT(":id", productHandler.Update())
 	}
 
 	// Run
@@ -45,7 +46,7 @@ func main() {
 }
 
 func loadJSONFile() ([]domain.Product, error) {
-    jsonData, err := ioutil.ReadFile("products.json")
+    jsonData, err := ioutil.ReadFile("/Users/romsuarez/Documents/Practica Ejercicios/go-web/go-web-exercises/products.json")
     if err != nil {
         return nil, err
     }

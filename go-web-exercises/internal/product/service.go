@@ -11,19 +11,12 @@ type Service interface {
 	GetById(id int) (domain.Product, error)
 	GetByPriceGt(price float64) ([]domain.Product, error)
 	Create(product domain.Product) (domain.Product, error)
+	Update(id int, p domain.Product) (domain.Product, error)
 }
 
 type ServiceImpl struct {
 	repository Repository
 }
-
-//Controller
-/*func NewServiceProductLocal(db []*Product, lastID int) *ServiceProduct {
-	return &ServiceProduct{
-		db:     db,
-		lastID: lastID,
-	}
-}*/
 
 func NewService(repository Repository) Service {
 	return &ServiceImpl{
@@ -36,11 +29,6 @@ var (
 	ErrProductExpiration = errors.New("Product expiration date is invalid")
 	ErrDuplicatedProduct= errors.New("Product code cannot be duplicated")
 )
-
-/*type ServiceProduct struct {
-	db     []*Product
-	lastID int
-}*/
 
 func (s *ServiceImpl) GetAll() []domain.Product {
 	return s.repository.GetAll()
@@ -70,34 +58,26 @@ func (s *ServiceImpl) Create(product domain.Product) (domain.Product, error) {
 	return newProduct, nil
 }
 
-/*func (sv *ServiceProduct) Save(name string,  quantity int, code_value int, is_published bool, expiration string, price float64) (newProduct *Product, err error) {
-	// instance
-	newProduct = &Product{
-		ID: sv.lastID + 1, 
-		Name : name,
-		Quantity : quantity,
-		Code_Value : code_value,
-		Is_Published : is_published, 
-		Expiration : expiration,
-		Price : price,
+func (s *ServiceImpl) Update(id int, u domain.Product) (domain.Product, error) {
+	p, err := s.repository.GetById(id)
+	if err != nil {
+		return domain.Product{}, err
 	}
-	//Chequeo que la expiracion del producto sea valida
-	if(!isValidDate(newProduct.Expiration)){
-		err = ErrProductExpiration
-		return
+	if u.Name != "" {
+		p.Name = u.Name
 	}
-
-	//Chequeo que el code value es unico
-	for _, prod := range sv.db {
-		if newProduct.Code_Value == prod.Code_Value{
-			err = ErrProductExpiration
-			return
-		}
+	if u.Expiration != "" {
+		p.Expiration = u.Expiration
 	}
-	sv.db = append(sv.db, newProduct)
-	sv.lastID++
-	return 
-}*/
-
-
-
+	if u.Quantity > 0 {
+		p.Quantity = u.Quantity
+	}
+	if u.Price > 0 {
+		p.Price = u.Price
+	}
+	p, err = s.repository.Update(id, p)
+	if err != nil {
+		return domain.Product{}, err
+	}
+	return p, nil
+}

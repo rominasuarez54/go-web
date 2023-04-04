@@ -62,39 +62,81 @@ func (h *ProductHandler) GetPriceGt() gin.HandlerFunc {
 }
 
 func (h *ProductHandler) Create() gin.HandlerFunc {
-	/*type request struct {
+	type request struct {
 		Name       	 string `json:"name"`
 		Quantity   	 int `json:"quantity"`
 		Code_Value 	 int `json:"code_value"`
 		Is_Published bool `json:"is_published"`
 		Expiration   string `json:"expiration"`
 		Price        float64 `json:"price"`
-	}*/
+	}
 
 	return func (c *gin.Context){
-		//var req request 
-		var product domain.Product
+		var req request 
+
 		//Obtains the new product form the request body
-		if err := c.ShouldBindJSON(&product); err != nil{
+		if err := c.ShouldBindJSON(&req); err != nil{
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		product := &domain.Product{
+			Name:  req.Name,
+			Quantity:   req.Quantity,
+			Code_Value:  req.Code_Value,
+			Is_Published: req.Is_Published,
+			Expiration: req.Expiration,
+			Price: req.Price,
+		}
 		//Create the new product
-		newProduct, err := h.service.Create(product)
-		if err != nil{
-			/*if errors.Is(err, internal.ErrProductExpiration) {
-				c.JSON(http.StatusUnprocessableEntity, gin.H{"message": "Product expiration date is invalid", "data": nil})
-				return
-			}
-			if errors.Is(err, internal.ErrDuplicatedProduct) {
-				c.JSON(http.StatusUnprocessableEntity, gin.H{"message": "Product code cannot be duplicated", "data": nil})
-				return
-			}*/
+		newProduct, err := h.service.Create(*product)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
-		}
 		c.JSON(http.StatusCreated,  newProduct)
 	}
+}
+
+func (h *ProductHandler) Update() gin.HandlerFunc {
+	type request struct {
+		Name       	 string `json:"name"`
+		Quantity   	 int `json:"quantity"`
+		Code_Value 	 int `json:"code_value"`
+		Is_Published bool `json:"is_published"`
+		Expiration   string `json:"expiration"`
+		Price        float64 `json:"price"`
+	}
+	return func(ctx *gin.Context) {
+		var req request
+		idParam := ctx.Param("id")
+		id, err := strconv.Atoi(idParam)
+		if err != nil {
+			ctx.JSON(400, gin.H{"error": "invalid id"})
+			return
+		}
+		//var product domain.Product
+		err = ctx.ShouldBindJSON(&req)
+		if err != nil {
+			ctx.JSON(400, gin.H{"error": "invalid product"})
+			return
+		}
+
+		product := domain.Product{
+			Name:  req.Name,
+			Quantity:   req.Quantity,
+			Code_Value:  req.Code_Value,
+			Is_Published: req.Is_Published,
+			Expiration: req.Expiration,
+			Price: req.Price,
+		}
+		
+		p, err := h.service.Update(id, product)
+		if err != nil {
+			ctx.JSON(409, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(200, p)
+	}
+	
 }

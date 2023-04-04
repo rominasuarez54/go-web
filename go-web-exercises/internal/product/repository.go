@@ -11,7 +11,8 @@ type Repository interface {
 	GetAll() []domain.Product
 	GetById(id int) (domain.Product, error)
 	GetByPriceGt(price float64) []domain.Product
-	Create(product domain.Product) (domain.Product, error)
+	Create(product domain.Product) (domain.Product, error)	
+	Update(id int, p domain.Product) (domain.Product, error)
 }
 
 //Implementation of repository service
@@ -63,16 +64,37 @@ func (r *RepositoryImpl) Create(newProduct domain.Product) (domain.Product, erro
 	if !r.isValidCodeValue(newProduct.Code_Value) {
 		return domain.Product{}, errors.New("Product code cannot be duplicated")
 	}
-	/*8for _, prod := range r.products {
-		if newProduct.Code_Value == prod.Code_Value{
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Product code cannot be duplicated "})
-			return
-		}
-	}*/
+	
 	newProduct.ID = len(r.products) + 1
 	r.products = append(r.products, newProduct)
 
 	return newProduct, nil
+}
+
+func (r *RepositoryImpl) UpdateAux(id int, p domain.Product) (domain.Product, error){
+	for i, product := range r.products{
+		if product.ID ==  id {
+			if !r.isValidCodeValue(p.Code_Value) && product.Code_Value != p.Code_Value {
+				return domain.Product{}, errors.New("code value already exists")
+			}
+			r.products[i] = p
+			return p, nil
+		}
+	}	
+	return domain.Product{}, errors.New("product not found")
+}
+
+func (r *RepositoryImpl) Update(id int, p domain.Product) (domain.Product, error) {
+	for i, product := range r.products {
+		if product.ID == id {
+			if !r.isValidCodeValue(p.Code_Value) && product.Code_Value != p.Code_Value {
+				return domain.Product{}, errors.New("code value already exists")
+			}
+			r.products[i] = p
+			return p, nil
+		}
+	}
+	return domain.Product{}, errors.New("product not found")
 }
 
 //Check if the given Expiration date is in a correct format. 
