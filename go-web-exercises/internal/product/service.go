@@ -12,6 +12,7 @@ type Service interface {
 	GetByPriceGt(price float64) ([]domain.Product, error)
 	Create(product domain.Product) (domain.Product, error)
 	Update(id int, p domain.Product) (domain.Product, error)
+	Delete(id int) (error)
 }
 
 type ServiceImpl struct {
@@ -80,4 +81,12 @@ func (s *ServiceImpl) Update(id int, u domain.Product) (domain.Product, error) {
 		return domain.Product{}, err
 	}
 	return p, nil
+}
+
+func (s *ServiceImpl) Delete(id int) error {
+	err := s.repository.Delete(id)
+	if err != nil {
+		return err
+	}
+	return nil
 }

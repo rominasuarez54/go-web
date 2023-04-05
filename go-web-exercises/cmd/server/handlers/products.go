@@ -113,13 +113,13 @@ func (h *ProductHandler) Update() gin.HandlerFunc {
 		idParam := ctx.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid id"})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 			return
 		}
 		//var product domain.Product
 		err = ctx.ShouldBindJSON(&req)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid product"})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid product"})
 			return
 		}
 
@@ -137,7 +137,7 @@ func (h *ProductHandler) Update() gin.HandlerFunc {
 			ctx.JSON(409, gin.H{"error": err.Error()})
 			return
 		}
-		ctx.JSON(200, p)
+		ctx.JSON(http.StatusOK, p)
 	}
 }
 
@@ -195,5 +195,22 @@ func (h *ProductHandler) Patch() gin.HandlerFunc {
 			return
 		}
 		ctx.JSON(http.StatusOK, p)
+	}
+}
+
+func (h *ProductHandler) Delete() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		idParam := ctx.Param("id")
+		id, err := strconv.Atoi(idParam)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+			return
+		}
+		err = h.service.Delete(id)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{"message" : "product deleted"})
 	}
 }

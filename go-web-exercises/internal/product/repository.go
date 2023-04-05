@@ -13,6 +13,8 @@ type Repository interface {
 	GetByPriceGt(price float64) []domain.Product
 	Create(product domain.Product) (domain.Product, error)	
 	Update(id int, p domain.Product) (domain.Product, error)
+	Delete(id int) (error)
+	
 }
 
 //Implementation of repository service
@@ -70,20 +72,6 @@ func (r *RepositoryImpl) Create(newProduct domain.Product) (domain.Product, erro
 
 	return newProduct, nil
 }
-
-func (r *RepositoryImpl) UpdateAux(id int, p domain.Product) (domain.Product, error){
-	for i, product := range r.products{
-		if product.ID ==  id {
-			if !r.isValidCodeValue(p.Code_Value) && product.Code_Value != p.Code_Value {
-				return domain.Product{}, errors.New("code value already exists")
-			}
-			r.products[i] = p
-			return p, nil
-		}
-	}	
-	return domain.Product{}, errors.New("product not found")
-}
-
 func (r *RepositoryImpl) Update(id int, p domain.Product) (domain.Product, error) {
 	for i, product := range r.products {
 		if product.ID == id {
@@ -95,6 +83,16 @@ func (r *RepositoryImpl) Update(id int, p domain.Product) (domain.Product, error
 		}
 	}
 	return domain.Product{}, errors.New("product not found")
+}
+
+func (r *RepositoryImpl) Delete(id int) (error) {
+	for i, product := range r.products {
+		if product.ID == id {
+			r.products = append(r.products[:i], r.products[i+1:]...)
+			return nil
+		}
+	}
+	return errors.New("product not found")
 }
 
 //Check if the given Expiration date is in a correct format. 

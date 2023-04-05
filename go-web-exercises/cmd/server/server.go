@@ -38,6 +38,7 @@ func main() {
 		productGroup.POST("", productHandler.Create())
 		productGroup.PUT(":id", productHandler.Update())
 		productGroup.PATCH(":id", productHandler.Patch())
+		productGroup.DELETE(":id", productHandler.Delete())
 	}
 
 	// Run
