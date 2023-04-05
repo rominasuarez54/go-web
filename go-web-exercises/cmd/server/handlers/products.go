@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"time"
+	"os"
 )
 
 //Controller
@@ -73,8 +74,15 @@ func (h *ProductHandler) Create() gin.HandlerFunc {
 	}
 
 	return func (c *gin.Context){
-		var req request 
+		tokenFromHeader := c.GetHeader("Token")
+		tokenFromEnv := os.Getenv("TOKEN")
 
+		if tokenFromEnv != tokenFromHeader {
+			c.JSON(http.StatusUnauthorized, "Token is invalid")
+			return
+		}
+
+		var req request 
 		//Obtains the new product form the request body
 		if err := c.ShouldBindJSON(&req); err != nil{
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -108,18 +116,26 @@ func (h *ProductHandler) Update() gin.HandlerFunc {
 		Expiration   string `json:"expiration"`
 		Price        float64 `json:"price"`
 	}
-	return func(ctx *gin.Context) {
+	return func(c *gin.Context) {
+		tokenFromHeader := c.GetHeader("Token")
+		tokenFromEnv := os.Getenv("TOKEN")
+
+		if tokenFromEnv != tokenFromHeader {
+			c.JSON(http.StatusUnauthorized, "Token is invalid")
+			return
+		}
+
 		var req request
-		idParam := ctx.Param("id")
+		idParam := c.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 			return
 		}
 		//var product domain.Product
-		err = ctx.ShouldBindJSON(&req)
+		err = c.ShouldBindJSON(&req)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid product"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product"})
 			return
 		}
 
@@ -134,10 +150,10 @@ func (h *ProductHandler) Update() gin.HandlerFunc {
 		
 		p, err := h.service.Update(id, product)
 		if err != nil {
-			ctx.JSON(409, gin.H{"error": err.Error()})
+			c.JSON(409, gin.H{"error": err.Error()})
 			return
 		}
-		ctx.JSON(http.StatusOK, p)
+		c.JSON(http.StatusOK, p)
 	}
 }
 
@@ -162,16 +178,23 @@ func (h *ProductHandler) Patch() gin.HandlerFunc {
 		Expiration  string  `json:"expiration,omitempty"`
 		Price       float64 `json:"price,omitempty"`
 	}
-	return func(ctx *gin.Context) {
-		var r Request
-		idParam := ctx.Param("id")
-		id, err := strconv.Atoi(idParam)
-		if err != nil {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "invalid id"})
+	return func(c *gin.Context) {
+		tokenFromHeader := c.GetHeader("Token")
+		tokenFromEnv := os.Getenv("TOKEN")
+
+		if tokenFromEnv != tokenFromHeader {
+			c.JSON(http.StatusUnauthorized, "Token is invalid")
 			return
 		}
-		if err := ctx.ShouldBindJSON(&r); err != nil {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "invalid request"})
+		var r Request
+		idParam := c.Param("id")
+		id, err := strconv.Atoi(idParam)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "invalid id"})
+			return
+		}
+		if err := c.ShouldBindJSON(&r); err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "invalid request"})
 			return
 		}
 		update := domain.Product{
@@ -185,32 +208,40 @@ func (h *ProductHandler) Patch() gin.HandlerFunc {
 		if update.Expiration != "" {
 			valid, err := validateExpiration(update.Expiration)
 			if !valid {
-				ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+				c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 				return
 			}
 		}
 		p, err := h.service.Update(id, update)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		ctx.JSON(http.StatusOK, p)
+		c.JSON(http.StatusOK, p)
 	}
 }
 
 func (h *ProductHandler) Delete() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		idParam := ctx.Param("id")
+	return func(c *gin.Context) {
+		tokenFromHeader := c.GetHeader("Token")
+		tokenFromEnv := os.Getenv("TOKEN")
+
+		if tokenFromEnv != tokenFromHeader {
+			c.JSON(http.StatusUnauthorized, "Token is invalid")
+			return
+		}
+
+		idParam := c.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 			return
 		}
 		err = h.service.Delete(id)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		ctx.JSON(http.StatusOK, gin.H{"message" : "product deleted"})
+		c.JSON(http.StatusOK, gin.H{"message" : "product deleted"})
 	}
 }

@@ -8,10 +8,13 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"net/http"
+	"github.com/joho/godotenv"
 )
 var products []domain.Product
 func main() {
 
+	_ = godotenv.Load()
+	
 	//Load json data file
 	_,err := loadJSONFile()
 	if err != nil{
