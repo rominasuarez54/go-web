@@ -3,6 +3,7 @@ package handlers
 import (
 	"go-web-exercises/internal/domain"
 	"go-web-exercises/internal/product"
+	"go-web-exercises/pkg/web"
 	"errors"
 	"net/http"
 	"github.com/gin-gonic/gin"
@@ -25,7 +26,7 @@ func NewProductHandler(service product.Service) *ProductHandler {
 func (h *ProductHandler) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		products := h.service.GetAll()
-		c.JSON(http.StatusOK, products)
+		web.SuccessfulResponse(http.StatusOK, products, c)
 	}
 }
 
@@ -34,15 +35,15 @@ func (h *ProductHandler) GetById() gin.HandlerFunc {
 		stringId := c.Param("id")
 		id, err := strconv.Atoi(stringId)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "Invalid id"})
+			web.ErrorResponse(http.StatusBadRequest, "Invalid id", c)
 			return
 		}
 		product, err := h.service.GetById(id)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "Invalid id"})
+			web.ErrorResponse(http.StatusBadRequest, "Invalid id", c)
 			return
 		}
-		c.JSON(http.StatusOK, product)
+		web.SuccessfulResponse(http.StatusOK, product, c)
 	}
 }
 
@@ -51,15 +52,15 @@ func (h *ProductHandler) GetPriceGt() gin.HandlerFunc {
 		valueOf := c.Query("priceGt")
 		value, err := strconv.ParseFloat(valueOf, 64)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": errors.New("Invalid product price")})
+			web.ErrorResponse(http.StatusBadRequest, "Invalid product price", c)
 			return
 		}
 		product, err := h.service.GetByPriceGt(value)
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			web.ErrorResponse(http.StatusBadRequest, err.Error(), c)
 			return
 		}
-		c.JSON(http.StatusOK, product)
+		web.SuccessfulResponse(http.StatusOK, product, c)
 	}
 }
 
@@ -78,14 +79,14 @@ func (h *ProductHandler) Create() gin.HandlerFunc {
 		tokenFromEnv := os.Getenv("TOKEN")
 
 		if tokenFromEnv != tokenFromHeader {
-			c.JSON(http.StatusUnauthorized, "Token is invalid")
+			web.ErrorResponse(http.StatusUnauthorized, "Token is invalid", c)
 			return
 		}
 
 		var req request 
 		//Obtains the new product form the request body
 		if err := c.ShouldBindJSON(&req); err != nil{
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			web.ErrorResponse(http.StatusBadRequest, err.Error(), c)
 			return
 		}
 
@@ -100,10 +101,10 @@ func (h *ProductHandler) Create() gin.HandlerFunc {
 		//Create the new product
 		newProduct, err := h.service.Create(*product)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				web.ErrorResponse(http.StatusBadRequest, err.Error(), c)
 				return
 			}
-		c.JSON(http.StatusCreated,  newProduct)
+		web.SuccessfulResponse(http.StatusCreated,  newProduct, c)
 	}
 }
 
@@ -121,7 +122,7 @@ func (h *ProductHandler) Update() gin.HandlerFunc {
 		tokenFromEnv := os.Getenv("TOKEN")
 
 		if tokenFromEnv != tokenFromHeader {
-			c.JSON(http.StatusUnauthorized, "Token is invalid")
+			web.ErrorResponse(http.StatusUnauthorized, "Token is invalid", c)
 			return
 		}
 
@@ -129,13 +130,13 @@ func (h *ProductHandler) Update() gin.HandlerFunc {
 		idParam := c.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+			web.ErrorResponse(http.StatusBadRequest, "Invalid id", c)
 			return
 		}
 		//var product domain.Product
 		err = c.ShouldBindJSON(&req)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product"})
+			web.ErrorResponse(http.StatusBadRequest, "Invalid product", c)
 			return
 		}
 
@@ -150,10 +151,10 @@ func (h *ProductHandler) Update() gin.HandlerFunc {
 		
 		p, err := h.service.Update(id, product)
 		if err != nil {
-			c.JSON(409, gin.H{"error": err.Error()})
+			web.ErrorResponse(http.StatusBadRequest, err.Error(), c)
 			return
 		}
-		c.JSON(http.StatusOK, p)
+		web.SuccessfulResponse(http.StatusOK, p, c)
 	}
 }
 
@@ -183,18 +184,18 @@ func (h *ProductHandler) Patch() gin.HandlerFunc {
 		tokenFromEnv := os.Getenv("TOKEN")
 
 		if tokenFromEnv != tokenFromHeader {
-			c.JSON(http.StatusUnauthorized, "Token is invalid")
+			web.ErrorResponse(http.StatusUnauthorized, "Token is invalid", c)
 			return
 		}
 		var r Request
 		idParam := c.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "invalid id"})
+			web.ErrorResponse(http.StatusNotFound, "Invalid id", c)
 			return
 		}
 		if err := c.ShouldBindJSON(&r); err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "invalid request"})
+			web.ErrorResponse(http.StatusNotFound, "Invalid request", c)
 			return
 		}
 		update := domain.Product{
@@ -208,16 +209,16 @@ func (h *ProductHandler) Patch() gin.HandlerFunc {
 		if update.Expiration != "" {
 			valid, err := validateExpiration(update.Expiration)
 			if !valid {
-				c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+				web.ErrorResponse(http.StatusNotFound, err.Error(), c)
 				return
 			}
 		}
 		p, err := h.service.Update(id, update)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			web.ErrorResponse(http.StatusInternalServerError,err.Error(), c)
 			return
 		}
-		c.JSON(http.StatusOK, p)
+		web.SuccessfulResponse(http.StatusOK, p, c)
 	}
 }
 
@@ -227,21 +228,21 @@ func (h *ProductHandler) Delete() gin.HandlerFunc {
 		tokenFromEnv := os.Getenv("TOKEN")
 
 		if tokenFromEnv != tokenFromHeader {
-			c.JSON(http.StatusUnauthorized, "Token is invalid")
+			web.ErrorResponse(http.StatusUnauthorized, "Token is invalid", c)
 			return
 		}
 
 		idParam := c.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+			web.ErrorResponse(http.StatusBadRequest, "invalid id", c)
 			return
 		}
 		err = h.service.Delete(id)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			web.ErrorResponse(http.StatusBadRequest,  err.Error(), c)
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message" : "product deleted"})
+		web.SuccessfulResponse(http.StatusOK, gin.H{"message" : "product deleted"}, c)
 	}
 }
