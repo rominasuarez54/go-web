@@ -37,6 +37,7 @@ func main() {
 		productGroup.GET("/search", productHandler.GetPriceGt())
 		productGroup.POST("", productHandler.Create())
 		productGroup.PUT(":id", productHandler.Update())
+		productGroup.PATCH(":id", productHandler.Patch())
 	}
 
 	// Run
