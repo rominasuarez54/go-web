@@ -4,6 +4,7 @@ import (
 	"go-web-exercises/cmd/server/handlers"
 	"go-web-exercises/internal/domain"
 	"go-web-exercises/internal/product"
+	"go-web-exercises/pkg/store"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"encoding/json"
@@ -16,11 +17,13 @@ func main() {
 	_ = godotenv.Load()
 	
 	//Load json data file
-	_,err := loadJSONFile()
+	/*_,err := loadJSONFile()
 	if err != nil{
 		panic (err)
-	}
+	}*/
 
+	//Load json data file
+	products := store.ReadJson()
 	repository := product.NewRepository(products)
 	service := product.NewService(repository)
 	productHandler := handlers.NewProductHandler(service)

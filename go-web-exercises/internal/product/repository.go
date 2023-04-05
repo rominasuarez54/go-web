@@ -4,6 +4,7 @@ import(
 	"errors"
 	"go-web-exercises/internal/domain"
 	"time"
+	"go-web-exercises/pkg/store"
 )
 
 //Interface of the product service
@@ -70,6 +71,11 @@ func (r *RepositoryImpl) Create(newProduct domain.Product) (domain.Product, erro
 	newProduct.ID = len(r.products) + 1
 	r.products = append(r.products, newProduct)
 
+	err := store.WriteSlice(r.products)
+	if err != nil{
+		return domain.Product{}, errors.New("Product cannot created")
+	}
+
 	return newProduct, nil
 }
 func (r *RepositoryImpl) Update(id int, p domain.Product) (domain.Product, error) {
@@ -79,9 +85,14 @@ func (r *RepositoryImpl) Update(id int, p domain.Product) (domain.Product, error
 				return domain.Product{}, errors.New("code value already exists")
 			}
 			r.products[i] = p
+			err := store.WriteSlice(r.products)
+			if err != nil{
+				return domain.Product{}, errors.New("Product cannot modify")
+			}
 			return p, nil
 		}
 	}
+	
 	return domain.Product{}, errors.New("product not found")
 }
 
@@ -89,6 +100,10 @@ func (r *RepositoryImpl) Delete(id int) (error) {
 	for i, product := range r.products {
 		if product.ID == id {
 			r.products = append(r.products[:i], r.products[i+1:]...)
+			err := store.WriteSlice(r.products)
+			if err != nil{
+				return errors.New("Product cannot delete")
+			}
 			return nil
 		}
 	}
