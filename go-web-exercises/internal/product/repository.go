@@ -1,78 +1,77 @@
 package product
 
-import(
+import (
 	"errors"
 	"go-web-exercises/internal/domain"
-	"time"
 	"go-web-exercises/pkg/store"
+	"time"
 )
 
-//Interface of the product service
+// Interface of the product service
 type Repository interface {
 	GetAll() []domain.Product
 	GetById(id int) (domain.Product, error)
 	GetByPriceGt(price float64) []domain.Product
-	Create(product domain.Product) (domain.Product, error)	
+	Create(product domain.Product) (domain.Product, error)
 	Update(id int, p domain.Product) (domain.Product, error)
-	Delete(id int) (error)
-	
+	Delete(id int) error
 }
 
-//Implementation of repository service
+// Implementation of repository service
 type RepositoryImpl struct {
 	products []domain.Product
 }
 
-//Returns a new instance of the repository.
+// Returns a new instance of the repository.
 func NewRepository(products []domain.Product) Repository {
 	return &RepositoryImpl{
 		products: products,
 	}
 }
 
-//Returns list of all available products 
-func(r *RepositoryImpl) GetAll() []domain.Product{
+// Returns list of all available products
+func (r *RepositoryImpl) GetAll() []domain.Product {
 	return r.products
 }
 
-//Returns a product filter by id
-func (r *RepositoryImpl) GetById(id int) (domain.Product, error){
-    for _, p := range r.products {
-        if p.ID == id {
-            return p, nil
-        }
-    }
-    return domain.Product{}, errors.New("Product does not exist")
+// Returns a product filter by id
+func (r *RepositoryImpl) GetById(id int) (domain.Product, error) {
+	for _, p := range r.products {
+		if p.ID == id {
+			return p, nil
+		}
+	}
+	return domain.Product{}, errors.New("Product does not exist")
 }
 
-//Returns a list of products whith the price grater than the given price
-func (r *RepositoryImpl) GetByPriceGt(price float64) []domain.Product{
-    var totalProducts []domain.Product
+// Returns a list of products whith the price grater than the given price
+func (r *RepositoryImpl) GetByPriceGt(price float64) []domain.Product {
+	var totalProducts []domain.Product
 
-    for _, p := range r.products {
-        if p.Price > price {
+	for _, p := range r.products {
+		if p.Price > price {
 			totalProducts = append(totalProducts, p)
 		}
-	  }
-    return totalProducts 
+	}
+	return totalProducts
 }
 
-func (r *RepositoryImpl) Create(newProduct domain.Product) (domain.Product, error){
-	//Check valid expiration date 
-	if !isValidDate(newProduct.Expiration){
+func (r *RepositoryImpl) Create(newProduct domain.Product) (domain.Product, error) {
+	//Check valid expiration date
+	if !isValidDate(newProduct.Expiration) {
 		return domain.Product{}, errors.New("Product expiration date is invalid")
 	}
 
-	//Check valid code_value 
+	//Check valid code_value
 	if !r.isValidCodeValue(newProduct.Code_Value) {
 		return domain.Product{}, errors.New("Product code cannot be duplicated")
 	}
-	
+
 	newProduct.ID = len(r.products) + 1
 	r.products = append(r.products, newProduct)
 
 	err := store.WriteSlice(r.products)
-	if err != nil{
+	if err != nil {
 		return domain.Product{}, errors.New("Product cannot created")
 	}
 
@@ -86,22 +85,22 @@ func (r *RepositoryImpl) Update(id int, p domain.Product) (domain.Product, error
 			}
 			r.products[i] = p
 			err := store.WriteSlice(r.products)
-			if err != nil{
+			if err != nil {
 				return domain.Product{}, errors.New("Product cannot modify")
 			}
 			return p, nil
 		}
 	}
-	
+
 	return domain.Product{}, errors.New("product not found")
 }
 
-func (r *RepositoryImpl) Delete(id int) (error) {
+func (r *RepositoryImpl) Delete(id int) error {
 	for i, product := range r.products {
 		if product.ID == id {
 			r.products = append(r.products[:i], r.products[i+1:]...)
 			err := store.WriteSlice(r.products)
-			if err != nil{
+			if err != nil {
 				return errors.New("Product cannot delete")
 			}
 			return nil
@@ -110,30 +109,24 @@ func (r *RepositoryImpl) Delete(id int) (error) {
 	return errors.New("product not found")
 }
 
-//Check if the given Expiration date is in a correct format. 
-func isValidDate(date string) bool{
+// Check if the given Expiration date is in a correct format.
+func isValidDate(date string) bool {
 	parsedDate, err := time.Parse("02/01/2006", date)
-	if err != nil{
+	if err != nil {
 		return false
 	}
 
-	if err == nil && parsedDate.After(time.Now()){
+	if err == nil && parsedDate.After(time.Now()) {
 		return true
 	}
 	return false
 }
 
-func (r *RepositoryImpl) isValidCodeValue(codeValue int) bool{
+func (r *RepositoryImpl) isValidCodeValue(codeValue int) bool {
 	for _, prod := range r.products {
-		if prod.Code_Value == codeValue{
+		if prod.Code_Value == codeValue {
 			return false
 		}
 	}
 	return true
 }
-
-
-
-
-
-

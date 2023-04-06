@@ -1,21 +1,24 @@
 package main
 
 import (
-	"go-web-exercises/cmd/server/handlers"
+	"encoding/json"
+	handler "go-web-exercises/cmd/server/handlers"
 	"go-web-exercises/internal/domain"
 	"go-web-exercises/internal/product"
 	"go-web-exercises/pkg/store"
-	"github.com/gin-gonic/gin"
 	"io/ioutil"
-	"encoding/json"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
+
 var products []domain.Product
+
 func main() {
 
 	_ = godotenv.Load()
-	
+
 	//Load json data file
 	/*_,err := loadJSONFile()
 	if err != nil{
@@ -26,11 +29,11 @@ func main() {
 	products := store.ReadJson()
 	repository := product.NewRepository(products)
 	service := product.NewService(repository)
-	productHandler := handlers.NewProductHandler(service)
+	productHandler := handler.NewProductHandler(service)
 
 	router := gin.Default()
 
-	//Ping endpoint 
+	//Ping endpoint
 	router.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "pong")
 	})
@@ -42,9 +45,9 @@ func main() {
 		productGroup.GET("/:id", productHandler.GetById())
 		productGroup.GET("/search", productHandler.GetPriceGt())
 		productGroup.POST("", productHandler.Create())
-		productGroup.PUT(":id", productHandler.Update())
-		productGroup.PATCH(":id", productHandler.Patch())
-		productGroup.DELETE(":id", productHandler.Delete())
+		productGroup.PUT("/:id", productHandler.Update())
+		productGroup.PATCH("/:id", productHandler.Patch())
+		productGroup.DELETE("/:id", productHandler.Delete())
 	}
 
 	// Run
@@ -54,10 +57,10 @@ func main() {
 }
 
 func loadJSONFile() ([]domain.Product, error) {
-    jsonData, err := ioutil.ReadFile("/Users/romsuarez/Documents/Practica Ejercicios/go-web/go-web-exercises/products.json")
-    if err != nil {
-        return nil, err
-    }
-    json.Unmarshal([]byte(jsonData), &products)
-    return products, nil
+	jsonData, err := ioutil.ReadFile("/Users/romsuarez/Documents/Practica Ejercicios/go-web/go-web-exercises/products.json")
+	if err != nil {
+		return nil, err
+	}
+	json.Unmarshal([]byte(jsonData), &products)
+	return products, nil
 }
