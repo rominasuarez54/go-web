@@ -6,7 +6,6 @@ import (
 	"go-web-exercises/internal/product"
 	"go-web-exercises/pkg/web"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -77,13 +76,13 @@ func (h *ProductHandler) Create() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		tokenFromHeader := c.GetHeader("Token")
+		/*tokenFromHeader := c.GetHeader("Token")
 		tokenFromEnv := os.Getenv("TOKEN")
 
 		if tokenFromEnv != tokenFromHeader {
 			web.ErrorResponse(http.StatusUnauthorized, "Token is invalid", c)
 			return
-		}
+		}*/
 
 		var req request
 		//Obtains the new product form the request body
@@ -120,13 +119,13 @@ func (h *ProductHandler) Update() gin.HandlerFunc {
 		Price        float64 `json:"price"`
 	}
 	return func(c *gin.Context) {
-		tokenFromHeader := c.GetHeader("Token")
+		/*tokenFromHeader := c.GetHeader("Token")
 		tokenFromEnv := os.Getenv("TOKEN")
 
 		if tokenFromEnv != tokenFromHeader {
 			web.ErrorResponse(http.StatusUnauthorized, "Token is invalid", c)
 			return
-		}
+		}*/
 
 		var req request
 		idParam := c.Param("id")
@@ -182,13 +181,13 @@ func (h *ProductHandler) Patch() gin.HandlerFunc {
 		Price        float64 `json:"price,omitempty"`
 	}
 	return func(c *gin.Context) {
-		tokenFromHeader := c.GetHeader("Token")
+		/*tokenFromHeader := c.GetHeader("Token")
 		tokenFromEnv := os.Getenv("TOKEN")
 
 		if tokenFromEnv != tokenFromHeader {
 			web.ErrorResponse(http.StatusUnauthorized, "Token is invalid", c)
 			return
-		}
+		}*/
 		var r Request
 		idParam := c.Param("id")
 		id, err := strconv.Atoi(idParam)
@@ -226,13 +225,13 @@ func (h *ProductHandler) Patch() gin.HandlerFunc {
 
 func (h *ProductHandler) Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenFromHeader := c.GetHeader("Token")
+		/*tokenFromHeader := c.GetHeader("Token")
 		tokenFromEnv := os.Getenv("TOKEN")
 
 		if tokenFromEnv != tokenFromHeader {
 			web.ErrorResponse(http.StatusUnauthorized, "Token is invalid", c)
 			return
-		}
+		}*/
 
 		idParam := c.Param("id")
 		id, err := strconv.Atoi(idParam)

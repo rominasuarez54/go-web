@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	handler "go-web-exercises/cmd/server/handlers"
+	"go-web-exercises/cmd/server/handlers/middleware"
 	"go-web-exercises/internal/domain"
 	"go-web-exercises/internal/product"
 	"go-web-exercises/pkg/store"
@@ -44,6 +45,7 @@ func main() {
 		productGroup.GET("", productHandler.GetAll())
 		productGroup.GET("/:id", productHandler.GetById())
 		productGroup.GET("/search", productHandler.GetPriceGt())
+		productGroup.Use(middleware.TokenAuthMiddleware())
 		productGroup.POST("", productHandler.Create())
 		productGroup.PUT("/:id", productHandler.Update())
 		productGroup.PATCH("/:id", productHandler.Patch())
